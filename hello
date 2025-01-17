@@ -214,5 +214,60 @@
 
     CREATE INDEX idx_customer_city ON Customers(city);
 CREATE INDEX idx_order_customer_id ON Orders(customer_id);
-    
+
+npm init -y
+npm install pg csv-writer
+change password-->
+ALTER USER postgres WITH PASSWORD '12345';
+
+
+node fetchOrder.js---->
+
+const { Client } = require('pg');  
+const createCsvWriter = require('csv-writer').createObjectCsvWriter; 
+const client = new Client({
+    user: 'postgres',
+    host: 'localhost',
+    database: 'Revision',
+    password: '1234',
+    port: '5000'
+}); 
+
+async function fetchAndExportOrders() { 
+    try { 
+        await client.connect(); 
+         
+        const lastWeekDate = new Date(); 
+        lastWeekDate.setDate(lastWeekDate.getDate() - 7); 
+        const formattedDate = lastWeekDate.toISOString().split('T')[0];  
+ 
+        const result = await client.query( 
+            `SELECT order_id, customer_id, order_date, total_amount 
+             FROM sale.Orders 
+             WHERE order_date >= $1`, 
+            [formattedDate] 
+        ); 
+ 
+        const csvWriter = createCsvWriter({ 
+            path: 'weekly_orders.csv', 
+            header: [ 
+                { id: 'order_id', title: 'Order ID' }, 
+                { id: 'customer_id', title: 'Customer ID' }, 
+                { id: 'order_date', title: 'Order Date' }, 
+                { id: 'total_amount', title: 'Total Amount' } 
+            ] 
+        }); 
+ 
+        await csvWriter.writeRecords(result.rows); 
+ 
+        console.log('CSV file has been written successfully: weekly_orders.csv'); 
+    } catch (error) { 
+        console.error('Error fetching orders:', error); 
+    } finally { 
+        await client.end(); 
+    } 
+} 
+ 
+fetchAndExportOrders();
+
     */
