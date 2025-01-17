@@ -1,0 +1,218 @@
+/*  ---------------------
+    insert sample data
+    
+    db.Users.insertMany([
+     { "username": "alice", "age": 25, "hobbies": ["reading", "traveling"], "lastLogin": "2024-01-
+    01T10:00:00Z" },
+    
+    
+    ----------------------
+    Query for users aged above 26 who have "sports" as a hobby. 
+    
+    db.Users.find({age: {$gt: 26}, hobbies: "sports"});
+    
+    
+    -----------------------
+    Update all users to include a status field with the value "active". 
+    
+    db.user.updateMany({}, {$set: {status: "active"}});
+    
+    
+    -----------------------
+    Aggregation
+    db.Users.aggregate([
+      {
+        $bucket: {
+          groupBy: "$age",
+          boundaries: [20,26,31 ],
+          default: "Other",
+          output: {
+            count: {$sum: 1},
+            avgAge: {$avg: "$age"}
+            
+          }
+        }
+      }
+    ]);
+    
+    
+    
+    
+    -------------------------
+    Schema validation
+    
+    db.createCollection("Products", {
+    
+        validator: {
+            $jsonSchema: {
+    
+                bsonType: "object",
+                required: ["name", "price", "categories"],
+                properties: {
+    
+                    name: {
+                        bsonType: "string",
+                        description: ""
+                    },
+                    price: {
+                        bsonType: "double",
+                        minimum: 0,
+                        description: ""
+                    },
+                    categories: {
+                        bsonType: "array",
+                        items: {bsonType: "string"},
+                        description: ""
+                    }		
+                }
+            }
+        }
+    });
+    
+    
+    
+    
+    -----------------pgadmin--------------------------------------------
+    
+    
+    Create tables
+    
+    CREATE TABLE Customers(
+        customer_id SERIAL PRIMARY KEY,
+        name VARCHAR(50),
+        email VARCHAR(100),
+        city VARCHAR(50)
+    );
+    
+    CREATE TABLE Orders(
+        order_id SERIAL PRIMARY KEY,
+        customer_id INT REFERENCES Customers(customer_id),
+        order_date DATE,
+        total_amount NUMERIC(10, 2)
+    );
+    
+    
+    --------------------
+    Insert doucument in to the table
+    
+    INSERT INTO Customers(name, email, city) VALUES
+    ('Alice', 'alice@gmail.com', 'colombo'),
+    ('bob', 'bob@gmail.com', 'oluvil');
+    
+    --------------------
+    Write a query to fetch customer names and their order totals, sorted by
+    total_amount in descending order.
+    
+    SELECT 
+        C.name AS customer_name,
+        O.total_amount
+    FROM
+        Customers C
+    JOIN
+        Orders O
+    ON
+        C.customer_id = O.customer_id
+    ORDER BY
+        O.total_amount DESC;
+    
+    
+    -----------------------
+    Create a materialized view called HighValueCustomers for customers
+    whose total orders exceed $500.
+    
+    CREATE MATERIALIZED VIEW HighValueCustomers AS
+    SELECT
+        C.customer_id,
+        C.name AS customer_name,
+        SUM(O.total_amount) AS total_orders
+    FROM
+        Customers C
+    JOIN
+        Orders O
+    ON
+        C.customer_id = O.customer_id
+    GROUP BY
+        C.customer_id, C.name
+    HAVING
+        SUM(O.total_amount)> 500;
+    
+    
+    --------------------
+    Refresh the view and display the updated results after inserting a new order.
+    
+    
+    INSERT INTO Orders(customer_id, order_date, total_amount)VALUES
+    (3, '2024-11-22', 210.00);
+    
+    
+    REFRESH MATERIALIZED VIEW HighValueCustomers;
+    
+    
+    SELECT * FROM HighValueCustomers;
+    
+    
+    ------------------------
+    Add an index on Orders(order_date) to optimize query performance.
+    
+    1.
+    CREATE INDEX idx_order_date ON Orders(order_date);
+    
+    2.
+    SELECT *
+    FROM Orders
+    WHERE order_date >= NOW() - INTERVAL '30 days';
+    
+    3.
+    EXPLAIN SELECT *
+    FROM Orders
+    WHERE order_date >= NOW() - INTERVAL '30 days';
+    
+    
+    
+    
+    
+    
+    ----------mongo Task3------------------
+    
+    ------------------------
+    transaction
+    
+    //1
+    const session1 = db.getMongo().startSession();
+    session1.startTransaction();
+    
+    //2
+    session1.getDatabase("Database1").Products.insertOne(
+    {
+        name: "Laptop",
+        price: 1500,
+        stock: 10,
+        categories:["Electronics", "Computers"]
+    },
+        {session1}
+    );
+    
+    //3
+    session1.getDatabase("Database1").Inventory.updateOne(
+        {productName: "Laptop"}
+        {$inc: {stock: -1}},
+        {session1}
+    };
+    
+    
+    session1.commitTransaction();
+    session1.endSession();
+    console.log("Transaction commited successfully.");
+
+    //3.2 -----------------pgadmin--------------------------------------------
+    SELECT c.city, SUM(o.total_amount) AS total_order_amount
+    FROM Customers c
+    JOIN Orders o ON c.customer_id = o.customer_id
+    GROUP BY c.city;
+    
+    //3.2
+
+    CREATE INDEX idx_customer_city ON Customers(city);
+CREATE INDEX idx_order_customer_id ON Orders(customer_id);
+    
+    */
