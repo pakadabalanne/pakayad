@@ -215,6 +215,8 @@
     CREATE INDEX idx_customer_city ON Customers(city);
 CREATE INDEX idx_order_customer_id ON Orders(customer_id);
 
+//4.1  -----------------vs code--------------------------------------------
+
 npm init -y
 npm install pg csv-writer
 change password-->
@@ -222,6 +224,8 @@ ALTER USER postgres WITH PASSWORD '12345';
 
 
 node fetchOrder.js---->
+// code start
+
 
 const { Client } = require('pg');  
 const createCsvWriter = require('csv-writer').createObjectCsvWriter; 
